@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CTF — Flag caché (3 couches)</title>
+  <meta name="description" content="Page de défi: trouver le flag caché derrière 3 couches — indices, obfuscation JS, stéganographie visuelle.">
+  <style>
+    :root{--bg:#071022;--card:#0b1220;--muted:#9aa6b2;--accent:#06b6d4}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#02101a);color:#eaf4ff;padding:28px;}
+    .wrap{max-width:980px;margin:0 auto}
+    h1{margin:0 0 12px}
+    .row{display:flex;gap:12px}
+    .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:16px;border-radius:12px;margin-bottom:14px}
+    input,button,select{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    .muted{color:var(--muted)}
+    pre{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;overflow:auto}
+    .bug{color:#fca5a5}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Défi : flag caché — 3 couches</h1>
+    <p class="muted">Tu vas devoir traverser <strong>trois couches</strong> pour récupérer le flag. Chaque couche donne un indice pour la suivante. Des bugs volontaires rendent le parcours plus épineux.</p>
+
+    <!-- Couche 1 : puzzle texte + indice -->
+    <section class="card" aria-labelledby="c1">
+      <h2 id="c1">Couche 1 — énigme textuelle</h2>
+      <p class="muted">Résous l'énigme pour obtenir un <em>mot-clé</em>. Ce mot-clé est nécessaire pour déverrouiller la couche 2.</p>
+      <p>« Je suis pris par les yeux, jeté par la bouche ; on me cherche, parfois on m'ignore ; je peux te dire où aller, ou te perdre. Qui suis-je ? »</p>
+      <div class="row" style="margin-top:8px">
+        <input id="c1Answer" placeholder="Réponse...">
+        <button id="c1Submit">Valider</button>
+      </div>
+      <div id="c1Msg" class="muted" style="margin-top:8px"></div>
+    </section>
+
+    <!-- Couche 2 : JS obfusqué + mini-run -->
+    <section class="card" aria-labelledby="c2">
+      <h2 id="c2">Couche 2 — script obfusqué</h2>
+      <p class="muted">Colle le <em>mot-clé</em> obtenu dans le champ ci-dessous et exécute. Le script simule un service et renverra un token si le mot est bon. Attention: le code contient un bug volontaire.</p>
+      <textarea id="c2Input" rows="4" style="width:100%" placeholder="Coller le mot-clé ici"></textarea>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button id="c2Run">Exécuter</button>
+        <button id="c2Inspect">Afficher script (obfusqué)</button>
+      </div>
+      <pre id="c2Output" style="margin-top:8px">—</pre>
+    </section>
+
+    <!-- Couche 3 : image stéganographique + révélation -->
+    <section class="card" aria-labelledby="c3">
+      <h2 id="c3">Couche 3 — stéganographie visuelle</h2>
+      <p class="muted">Le token de la couche 2 te permet d'accéder à l'image. Tu devras appliquer un filtre (glisseur) pour révéler le flag encodé en base64 dans les pixels.</p>
+      <div class="row" style="align-items:center">
+        <input id="tokenInput" placeholder="Token de la couche 2">
+        <button id="loadImage">Charger image</button>
+      </div>
+      <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
+        <canvas id="stego" width="640" height="220" style="max-width:100%;border-radius:8px;background:#02101a"></canvas>
+        <div style="width:180px">
+          <label for="reveal">Révélation</label>
+          <input id="reveal" type="range" min="0" max="100" value="0" style="width:100%">
+          <div style="height:8px"></div>
+          <button id="extract">Extraire</button>
+        </div>
+      </div>
+      <pre id="finalOut" style="margin-top:10px">—</pre>
+    </section>
+
+    <footer class="muted">Indice global : lis bien les messages d'erreur, et attention aux petites fautes involontaires (typos) — elles font partie du défi.</footer>
+  </div>
+
+  <script>
+    // ---------- COUCHE 1 ----------
+    const answerMap = {"indice":"indice","regard":"regard","regarder":"regarder","oeil":"oeil"};
+    const c1Submit = document.getElementById('c1Submit');
+    const c1Answer = document.getElementById('c1Answer');
+    const c1Msg = document.getElementById('c1Msg');
+
+    c1Submit.addEventListener('click', ()=>{
+      const val = (c1Answer.value || '').trim().toLowerCase();
+      // accept several synonyms; give hint otherwise
+      if(val.length === 0){ c1Msg.textContent = 'Rentre une réponse.'; return; }
+      if(['regard','oeil','vision','indice'].includes(val)){
+        // mot-clé canonical
+        c1Msg.textContent = 'Bien — mot-clé : “h杳nations”';
+        // note: the string above is slightly obfuscated (UTF + unicode escapes)
+      } else {
+        c1Msg.textContent = 'Mauvaise réponse — pense à ce que l’on prend avec les yeux.';
+      }
+    });
+
+    // ---------- COUCHE 2 ----------
+    // Script obfusqué (petite simulation)
+    const hiddenScript = `(function(s){
+      // Ce code vérifie le mot et renvoie un token. Il contient volontairement un bug subtil.
+      function h(input){
+        // normalize
+        var v = input && input.toLowerCase().trim();
+        // BUG volontaire : une variable mal nommée (vvs vsv)
+        if(!v) return null;
+        // correct secret is 'hignation' (léger anagramme)
+        if(v.replace(/[^a-z]/g,'') === 'hignation'){
+          // pseudo-token encodé
+          return btoa('token:'+Date.now()+':'+Math.random().toString(36).slice(2,10));
+        }
+        return null;
+      }
+      return h(s);
+    })`;
+
+    document.getElementById('c2Inspect').addEventListener('click', ()=>{
+      document.getElementById('c2Output').textContent = hiddenScript;
+    });
+
+    document.getElementById('c2Run').addEventListener('click', ()=>{
+      const inp = document.getElementById('c2Input').value.trim();
+      // Safely eval the function wrapper without exposing globals
+      try{
+        // small sandbox: create function from string then call
+        const fn = new Function('s', 'return ('+hiddenScript+')(s)');
+        const token = fn(inp);
+        if(token){
+          document.getElementById('c2Output').textContent = 'OK — token: '+token;
+        } else {
+          // BUG-STYLE hint: sometimes the secret is an anagram — vérifie les lettres.
+          document.getElementById('c2Output').textContent = 'Échec — token non généré. (Vérifie l\'ordre des lettres)';
+        }
+      }catch(e){
+        document.getElementById('c2Output').textContent = 'Erreur d\'exécution: '+e.message;
+      }
+    });
+
+    // ---------- COUCHE 3 ----------
+    // Image data: we embed a short base64 flag into the blue channel LSB of pixels.
+    // For l'exercice, le flag est : FLAG{c3_surprise}
+    // We'll generate an image procedurally where the LSBs of the blue channel contain the base64 string.
+
+    // encode helper: embed bits from a string into pixel data
+    function makeStegoCanvas(str){
+      const base64 = btoa(str);
+      // convert base64 to bits
+      const bits = [];
+      for(let i=0;i<base64.length;i++){
+        const c = base64.charCodeAt(i);
+        for(let b=7;b>=0;b--) bits.push((c>>b)&1);
+      }
+      // create canvas
+      const canvas = document.createElement('canvas');
+      const W = 640, H = 220; canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext('2d');
+      // draw noisy background
+      const img = ctx.createImageData(W,H);
+      for(let i=0;i<W*H;i++){
+        const r = Math.floor(Math.random()*80)+20;
+        const g = Math.floor(Math.random()*100)+10;
+        const idx = i*4;
+        img.data[idx] = r;
+        img.data[idx+1] = g;
+        // embed bit in blue LSB if bits remain, otherwise random
+        const bit = bits.shift();
+        const bval = (Math.floor(Math.random()*120)+60) & 0xFE; // make even
+        img.data[idx+2] = (bit===undefined) ? bval + (Math.random()>0.5?1:0) : (bval | bit);
+        img.data[idx+3] = 255;
+      }
+      ctx.putImageData(img,0,0);
+      return canvas;
+    }
+
+    // Pre-generate image but keep it locked until correct token
+    const secretFlag = 'FLAG{c3_surprise}';
+    const stegoCanvas = makeStegoCanvas(secretFlag);
+
+    document.getElementById('loadImage').addEventListener('click', ()=>{
+      const token = document.getElementById('tokenInput').value.trim();
+      // simple validation: token must start with 'dG9rZW4' (base64 'token')
+      if(!token){ document.getElementById('finalOut').textContent = 'Fournis le token.'; return; }
+      if(!token.startsWith('dG9rZW4')){
+        document.getElementById('finalOut').textContent = 'Token invalide. (Astuce: regarde le préfixe base64 du token)';
+        return;
+      }
+      // draw into visible canvas
+      const vis = document.getElementById('stego');
+      const vctx = vis.getContext('2d');
+      vctx.clearRect(0,0,vis.width,vis.height);
+      // scale the pre-made canvas onto the visible canvas
+      vctx.drawImage(stegoCanvas, 0, 0, vis.width, vis.height);
+      document.getElementById('finalOut').textContent = 'Image chargée. Utilise le curseur puis clique sur Extraire.';
+    });
+
+    // extraction: read blue LSBs and reconstruct base64
+    document.getElementById('extract').addEventListener('click', ()=>{
+      const vis = document.getElementById('stego');
+      const vctx = vis.getContext('2d');
+      const img = vctx.getImageData(0,0,vis.width,vis.height).data;
+      const bits = [];
+      for(let i=2;i<img.length;i+=4){
+        bits.push(img[i]&1);
+      }
+      // group bits into bytes and into chars until we can decode base64 successfully
+      let bytes = [];
+      for(let i=0;i+7<bits.length;i+=8){
+        bytes.push(b);
+      }
+      // convert bytes to string
+
+      let s = '';
+      for(let i=0;i<bytes.length;i++){
+        if(bytes[i] === 0) break; // stop at null
+
+        s += String.fromCharCode(bytes[i]);
+      }
+      // Try to decode base64; if fails, give hint
+      try{
+        const decoded = atob(s);
+        // minor safety: only show if looks like FLAG{...}
+        if(decoded.startsWith('FLAG{')){
+
+          document.getElementById('finalOut').textContent = 'Bravo — flag : '+decoded;
+        } else {
+          document.getElementById('finalOut').textContent = 'Extraction OK mais résultat inattendu : '+decoded;
+        }
+      }catch(e){
+        document.getElementById('finalOut').textContent = 'Échec décodage base64. Indice : ajuste le curseur Révélation pour réduire le bruit.';
+      }
+    });
+
+    // reveal slider: apply a simple filter to help see differences (simulate bug: slider currently doesn't affect extraction algorithm)
+    document.getElementById('reveal').addEventListener('input', (e)=>{
+      const val = e.target.value/100;
+      const vis = document.getElementById('stego');
+      const vctx = vis.getContext('2d');
+      // visual effect only
+      vctx.globalCompositeOperation = 'overlay';
+      vctx.fillStyle = 'rgba(255,255,255,'+ (val*0.2) +')';
+      vctx.fillRect(0,0,vis.width,vis.height);
+      vctx.globalCompositeOperation = 'source-over';
+    });
+
+    // Small intentional 'bug' hint: sometimes the C1 message uses unicode escapes — si tu ne vois pas le mot, copie-colle et nettoie.
+
+  </script>
+</body>
+</html>
+
