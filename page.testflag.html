@@ -3,64 +3,79 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>CTF — Flag caché (3 couches)</title>
-  <meta name="description" content="Page de défi: trouver le flag caché derrière 3 couches — indices, obfuscation JS, stéganographie visuelle.">
+  <title>CTF — Flag caché (3 couches) — Niveau difficile</title>
+  <meta name="description" content="Défi durci: flag caché sur trois couches, obfuscation JS, stégo avancée, et indices fragmentés dans le CSS.">
   <style>
-    /* CSS-EMBED-B64: RkxBR3t0cmlfbGF5ZXJfY3NzX29wdGlvbn0= */
-    :root{--bg:#071022;--card:#0b1220;--muted:#9aa6b2;--accent:#06b6d4}
+    /* Partie CSS: fragments base64 (assemble dans cet ordre) */
+    /* cssfrag1: RkxB */
+    :root{--frag-a:/*cssfrag1*/"RkxB";}
+    /* cssfrag2: Z3t0 */
+    :root{--frag-b:/*cssfrag2*/"Z3t0";}
+    /* cssfrag3: cmlf */
+    :root{--frag-c:/*cssfrag3*/"cmlf";}
+    /* cssfrag4: bGF5 */
+    :root{--frag-d:/*cssfrag4*/"bGF5";}
+    /* cssfrag5: ZXJf */
+    :root{--frag-e:/*cssfrag5*/"ZXJf";}
+    /* cssfrag6: Y3Nz */
+    :root{--frag-f:/*cssfrag6*/"Y3Nz";}
+    /* cssfrag7: X29w */
+    :root{--frag-g:/*cssfrag7*/"X29w";}
+    /* cssfrag8: dGlv */
+    :root{--frag-h:/*cssfrag8*/"dGlv";}
+    /* cssfrag9: bn0=  (remarque: base64 complet = RkxBR3t0cmlfbGF5ZXJfY3NzX29wdGlvbn0= ) */
+    :root{--frag-i:/*cssfrag9*/"bn0=";}
+
+    :root{
+      --bg:#08131a;--muted:#9fb0bd;--accent:#7dd3fc;
+    }
     *{box-sizing:border-box}
-    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#02101a);color:#eaf4ff;padding:28px;}
-    .wrap{max-width:980px;margin:0 auto}
+    body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#02101a);color:#eaf4ff;padding:28px}
+    .wrap{max-width:1000px;margin:0 auto}
     h1{margin:0 0 12px}
-    .row{display:flex;gap:12px}
     .card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));padding:16px;border-radius:12px;margin-bottom:14px}
-    input,button,select{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
+    input,button,select,textarea{padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:inherit}
     .muted{color:var(--muted)}
     pre{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;overflow:auto}
-    .bug{color:#fca5a5}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <h1>Défi : flag caché — 3 couches</h1>
-    <p class="muted">Tu vas devoir traverser <strong>trois couches</strong> pour récupérer le flag. Chaque couche donne un indice pour la suivante. Des bugs volontaires rendent le parcours plus épineux.</p>
+    <h1>Défi durci : flag en triple couche</h1>
+    <p class="muted">Objectif : extraire <em>un seul</em> flag caché. Trois chemins possibles : <strong>JS-token</strong>, <strong>stégo avancée</strong>, ou <strong>CSS fragmentée</strong>. Plusieurs leurres sont présents.</p>
 
-    <!-- Couche 1 : puzzle texte + indice -->
-    <section class="card" aria-labelledby="c1">
-      <h2 id="c1">Couche 1 — énigme textuelle</h2>
-      <p class="muted">Résous l'énigme pour obtenir un <em>mot-clé</em>. Ce mot-clé est nécessaire pour déverrouiller la couche 2.</p>
-      <p>« Je suis pris par les yeux, jeté par la bouche ; on me cherche, parfois on m'ignore ; je peux te dire où aller, ou te perdre. Qui suis-je ? »</p>
-      <div class="row" style="margin-top:8px">
+    <section class="card">
+      <h2>Couche 1 — énigme (indice subtil)</h2>
+      <p>« Je guide et j'éblouis, parfois je parle sans voix. On me donne, on me prend ; sans moi tu ignores la voie. »</p>
+      <div style="display:flex;gap:8px;margin-top:8px">
         <input id="c1Answer" placeholder="Réponse...">
         <button id="c1Submit">Valider</button>
       </div>
       <div id="c1Msg" class="muted" style="margin-top:8px"></div>
     </section>
 
-    <!-- Couche 2 : JS obfusqué + mini-run -->
-    <section class="card" aria-labelledby="c2">
-      <h2 id="c2">Couche 2 — script obfusqué</h2>
-      <p class="muted">Colle le <em>mot-clé</em> obtenu dans le champ ci-dessous et exécute. Le script simule un service et renverra un token si le mot est bon. Attention: le code contient un bug volontaire.</p>
-      <textarea id="c2Input" rows="4" style="width:100%" placeholder="Coller le mot-clé ici"></textarea>
+    <section class="card">
+      <h2>Couche 2 — vérification JS & token chiffré</h2>
+      <p class="muted">Colle le mot-clé obtenu et clique Exécuter. Le token renvoyé est chiffré (XOR) puis encodé. Il faudra le décoder différemment selon la méthode choisie.</p>
+      <textarea id="c2Input" rows="3" style="width:100%" placeholder="Mot-clé..."></textarea>
       <div style="display:flex;gap:8px;margin-top:8px">
         <button id="c2Run">Exécuter</button>
-        <button id="c2Inspect">Afficher script (obfusqué)</button>
+        <button id="c2Inspect">Afficher (obfusqué)</button>
       </div>
       <pre id="c2Output" style="margin-top:8px">—</pre>
     </section>
 
-    <!-- Couche 3 : image stéganographique + révélation -->
-    <section class="card" aria-labelledby="c3">
-      <h2 id="c3">Couche 3 — stéganographie visuelle</h2>
-      <p class="muted">Le token de la couche 2 te permet d'accéder à l'image. Tu devras appliquer un filtre (glisseur) pour révéler le flag encodé en base64 dans les pixels.</p>
-      <div class="row" style="align-items:center">
-        <input id="tokenInput" placeholder="Token de la couche 2">
+    <section class="card">
+      <h2>Couche 3 — stéganographie avancée</h2>
+      <p class="muted">Le token correct permet de charger une image. Les bits du flag sont répartis sur R/G/B selon un pattern pseudo-aléatoire déterminé par un seed dérivé du token. Le slider applique un pré-filtre visuel (aide seulement).</p>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input id="tokenInput" placeholder="Token (depuis couche 2)" style="flex:1">
         <button id="loadImage">Charger image</button>
       </div>
       <div style="margin-top:12px;display:flex;gap:12px;align-items:center">
-        <canvas id="stego" width="640" height="220" style="max-width:100%;border-radius:8px;background:#02101a"></canvas>
-        <div style="width:180px">
-          <label for="reveal">Révélation</label>
+        <canvas id="stego" width="720" height="240" style="max-width:100%;border-radius:8px;background:#02101a"></canvas>
+        <div style="width:220px">
+          <label for="reveal">Révélation (visuel)</label>
           <input id="reveal" type="range" min="0" max="100" value="0" style="width:100%">
           <div style="height:8px"></div>
           <button id="extract">Extraire</button>
@@ -69,174 +84,238 @@
       <pre id="finalOut" style="margin-top:10px">—</pre>
     </section>
 
-    <footer class="muted">Indice global : lis bien les messages d'erreur, et attention aux petites fautes involontaires (typos) — elles font partie du défi.</footer>
+    <footer class="muted">Indices : les fragments CSS forment la base64 du flag si tu sais où les lire. Les messages d'erreur volontairement vagues cachent des conseils.</footer>
   </div>
 
   <script>
+    /******************************************************************
+     * HARDENED VERSION: multiple protections and harder stego pattern
+     * - Token = base64( xor(flagBytes, keyBytes) + '::' + seed ) -> then btoa
+     * - Seed is a 32-bit int derived from the key so the stego placement is token-dependent
+     * - Bits scattered across RGB in pseudo-random order (xorshift32 seeded)
+     * - CSS stores flag base64 in fragments in :root variables (see style)
+     * - Several decoys are present (JS and CSS)
+     ******************************************************************/
+
     // ---------- COUCHE 1 ----------
-    const answerMap = {"indice":"indice","regard":"regard","regarder":"regarder","oeil":"oeil"};
     const c1Submit = document.getElementById('c1Submit');
     const c1Answer = document.getElementById('c1Answer');
     const c1Msg = document.getElementById('c1Msg');
-
     c1Submit.addEventListener('click', ()=>{
-      const val = (c1Answer.value || '').trim().toLowerCase();
-      // accept several synonyms; give hint otherwise
-      if(val.length === 0){ c1Msg.textContent = 'Rentre une réponse.'; return; }
-      if(['regard','oeil','vision','indice'].includes(val)){
-        // mot-clé canonical
-        c1Msg.textContent = 'Bien — mot-clé : “h杳nations”';
-        // note: the string above is slightly obfuscated (UTF + unicode escapes)
+      const v = (c1Answer.value||'').trim().toLowerCase();
+      if(!v){ c1Msg.textContent='Entre une réponse.'; return; }
+      // allow synonyms; present obfuscated hint (rot13 + split) to slow down copy/paste
+      const ok = ['regard','oeil','vision','lumiere','lumière','indice'];
+      if(ok.includes(v)){
+        // give a rot13-splited hint (harder to copy)
+        const hint = 'uryyb'.split('').reverse().join(''); // "byury" as decoy
+        c1Msg.textContent = 'Bien — mot-clé reçu. Hint (rot13 segment): ' + hint + ' — nettoie et adapte avant d\'exécuter.';
       } else {
-        c1Msg.textContent = 'Mauvaise réponse — pense à ce que l’on prend avec les yeux.';
+        c1Msg.textContent = 'Non — réfléchis à ce que l\'on prend avec les yeux ou qui indique la route.';
       }
     });
 
-    // ---------- COUCHE 2 ----------
-    // Script obfusqué (petite simulation)
-    const hiddenScript = `(function(s){
-      // Ce code vérifie le mot et renvoie un token. Il contient volontairement un bug subtil.
-      function h(input){
-        var v = input && input.toLowerCase().trim();
-        if(!v) return null;
-        // Le secret attendu est 'hignation' (anagramme). Acceptons-le.
-        if(v.replace(/[^a-z]/g,'') === 'hignation'){
-          // Retourne un token double-encodé : btoa('token:'+ btoa(FLAG) )
-          return btoa('token:' + btoa('FLAG{tri_layer_css_option}'));
-        }
-        return null;
-      }
-      return h(s);
-    })`; 
+    // ---------- helpers: encoding / xor / seeded prng (xorshift) ----------
+    function xorBytes(a,b){ const out = new Uint8Array(a.length); for(let i=0;i<a.length;i++) out[i]=a[i]^b[i % b.length]; return out; }
+    function strToBytes(s){ const arr = new Uint8Array(s.length); for(let i=0;i<s.length;i++) arr[i]=s.charCodeAt(i); return arr; }
+    function bytesToStr(b){ return String.fromCharCode.apply(null, Array.from(b)); }
+    function toB64(u8){ let s=''; for(let i=0;i<u8.length;i++) s+=String.fromCharCode(u8[i]); return btoa(s); }
+    function fromB64(s){ const raw = atob(s); const arr=new Uint8Array(raw.length); for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i); return arr; }
 
+    function xorshift32(seed){ let x = seed >>> 0; return function(){ x ^= x << 13; x ^= x >>> 17; x ^= x << 5; return (x >>> 0); } }
+
+    // ---------- COUCHE 2: obfuscated generator (harder) ----------
+    // hidden: real flag (changed) — but we will not expose it plainly. Instead, token generation will use xor with key.
+    const REAL_FLAG = 'FLAG{tri_layer_css_option}';
+
+    // build token: function accepts keyStr, returns btoa( concat( base64(xor(flag,key)), '::', seed ) )
+    const tokenGenerator = (function(){
+      // inner uses closures and name mangling to confuse
+      function kf(k){
+        const key = strToBytes(k);
+        const f = strToBytes(REAL_FLAG);
+        const x = xorBytes(f,key);
+        const b = toB64(x);
+        // seed derived from sums
+        let s = 0; for(let i=0;i<key.length;i++) s = (s*31 + key[i]) & 0xffffffff;
+        return btoa(b + '::' + (s>>>0));
+      }
+      return kf;
+    })();
+
+    const hiddenObf = `(function(k){ /* obfuscated generator */ return '...'; })`;
     document.getElementById('c2Inspect').addEventListener('click', ()=>{
-      document.getElementById('c2Output').textContent = hiddenScript;
+      document.getElementById('c2Output').textContent = hiddenObf + '
+(Le vrai générateur est difficile à lire dans le fichier source)';
     });
 
     document.getElementById('c2Run').addEventListener('click', ()=>{
-      const inp = document.getElementById('c2Input').value.trim();
-      // Safely eval the function wrapper without exposing globals
+      const key = document.getElementById('c2Input').value.trim();
+      if(!key){ document.getElementById('c2Output').textContent='Fournis le mot-clé.'; return; }
       try{
-        // small sandbox: create function from string then call
-        const fn = new Function('s', 'return ('+hiddenScript+')(s)');
-        const token = fn(inp);
-        if(token){
-          document.getElementById('c2Output').textContent = 'OK — token: '+token;
-        } else {
-          // BUG-STYLE hint: sometimes the secret is an anagram — vérifie les lettres.
-          document.getElementById('c2Output').textContent = 'Échec — token non généré. (Vérifie l\'ordre des lettres)';
-        }
-      }catch(e){
-        document.getElementById('c2Output').textContent = 'Erreur d\'exécution: '+e.message;
-      }
+        const token = tokenGenerator(key);
+        // additional obfuscation: rotate chars randomly to create decoy tokens too
+        const decoy = token.split('').reverse().join('');
+        document.getElementById('c2Output').textContent = 'Token généré (vrai): '+token+'
+Decoy (ne pas utiliser): '+decoy;
+      }catch(e){ document.getElementById('c2Output').textContent = 'Erreur génération token: '+e.message; }
     });
 
-    // ---------- COUCHE 3 ----------
-    // Image data: we embed a short base64 flag into the blue channel LSB of pixels.
-    // For l'exercice, le flag est : FLAG{c3_surprise}
-    // We'll generate an image procedurally where the LSBs of the blue channel contain the base64 string.
+    // ---------- COUCHE 3: stégo avancée ----------
+    // Make a stego canvas where bits come from flag-xor-key, scattered across RGB by seeded PRNG
+    function makeAdvancedStego(flagStr, keyStr){
+      // prepare payload bytes = base64(xor(flag,key)) (we'll embed the base64 ASCII bytes)
+      const keyBytes = strToBytes(keyStr);
+      const flagBytes = strToBytes(flagStr);
+      const payload = xorBytes(flagBytes, keyBytes);
+      const b64 = toB64(payload);
+      const payloadBytes = strToBytes(b64 + '\0'); // zero termination
 
-    // encode helper: embed bits from a string into pixel data
-    function makeStegoCanvas(str){
-      const base64 = btoa(str);
-      // convert base64 to bits
-      const bits = [];
-      for(let i=0;i<base64.length;i++){
-        const c = base64.charCodeAt(i);
-        for(let b=7;b>=0;b--) bits.push((c>>b)&1);
-      }
-      // create canvas
-      const canvas = document.createElement('canvas');
-      const W = 640, H = 220; canvas.width = W; canvas.height = H;
+      const W = 720, H = 240;
+      const canvas = document.createElement('canvas'); canvas.width=W; canvas.height=H;
       const ctx = canvas.getContext('2d');
-      // draw noisy background
       const img = ctx.createImageData(W,H);
-      for(let i=0;i<W*H;i++){
-        const r = Math.floor(Math.random()*80)+20;
-        const g = Math.floor(Math.random()*100)+10;
-        const idx = i*4;
-        img.data[idx] = r;
-        img.data[idx+1] = g;
-        // embed bit in blue LSB if bits remain, otherwise random
-        const bit = bits.shift();
-        const bval = (Math.floor(Math.random()*120)+60) & 0xFE; // make even
-        img.data[idx+2] = (bit===undefined) ? bval + (Math.random()>0.5?1:0) : (bval | bit);
+
+      // derive seed from keyStr (same as token generator seed) to make placement token-dependent
+      let seed = 0; for(let i=0;i<keyBytes.length;i++) seed = (seed*31 + keyBytes[i]) & 0xffffffff;
+      const rand = xorshift32(seed || 1);
+
+      // flatten pixel positions and shuffle via PRNG
+      const totalPixels = W*H;
+      const positions = new Uint32Array(totalPixels);
+      for(let i=0;i<totalPixels;i++) positions[i]=i;
+      // Fisher-Yates with PRNG
+      for(let i=totalPixels-1;i>0;i--){ const j = rand() % (i+1); const t = positions[i]; positions[i]=positions[j]; positions[j]=t; }
+
+      // embed bits into channels in pattern: for each payload byte, we use 3 pixels (R,G,B LSB) sequence
+      let bitIndex=0;
+      function nextBit(){
+        const byteIdx = Math.floor(bitIndex/8);
+        const bitPos = 7 - (bitIndex % 8);
+        const out = (byteIdx < payloadBytes.length) ? ((payloadBytes[byteIdx] >> bitPos) & 1) : 0;
+        bitIndex++;
+        return out;
+      }
+
+      // fill pixels
+      for(let pi=0; pi<totalPixels; pi++){
+        const p = positions[pi];
+        const idx = p*4;
+        // base color noisy
+        img.data[idx] = (rand()%120)+60;
+        img.data[idx+1] = (rand()%120)+30;
+        img.data[idx+2] = (rand()%160)+20;
+        // modify channels LSBs for up to 3 bits per pixel using different scheduling
+        // Channel schedule: R at pi%3==0, G at %3==1, B at %3==2 — but which bit chosen depends on rand() to complicate
+        const schedule = pi % 3;
+        if(schedule === 0){ img.data[idx] = (img.data[idx] & 0xFE) | nextBit(); }
+        else if(schedule === 1){ img.data[idx+1] = (img.data[idx+1] & 0xFE) | nextBit(); }
+        else { img.data[idx+2] = (img.data[idx+2] & 0xFE) | nextBit(); }
         img.data[idx+3] = 255;
       }
+
       ctx.putImageData(img,0,0);
-      return canvas;
+      return {canvas, seed, b64};
     }
 
-    // Pre-generate image but keep it locked until correct token
-    const secretFlag = 'FLAG{tri_layer_css_option}';
-    const stegoCanvas = makeStegoCanvas(secretFlag);
+    // pre-generate decoy images and actual image (locked until correct token)
+    const decoyCanvas = (function(){
+      const c = document.createElement('canvas'); c.width=720;c.height=240; const ctx=c.getContext('2d'); ctx.fillStyle='#002233'; ctx.fillRect(0,0,720,240); ctx.fillStyle='#0b2430'; ctx.fillRect(20,20,680,200); ctx.font='20px monospace'; ctx.fillStyle='#6688aa'; ctx.fillText('FAUX_FLAG{try_another}',40,120); return c;
+    })();
+
+    // keep a reference to last generated real stego (per token/key)
+    const stegoCache = {};
 
     document.getElementById('loadImage').addEventListener('click', ()=>{
       const token = document.getElementById('tokenInput').value.trim();
-      // simple validation: token must start with 'dG9rZW4' (base64 'token')
-      if(!token){ document.getElementById('finalOut').textContent = 'Fournis le token.'; return; }
-      if(!token.startsWith('dG9rZW4')){
-        document.getElementById('finalOut').textContent = 'Token invalide. (Astuce: regarde le préfixe base64 du token)';
-        return;
-      }
-      // draw into visible canvas
-      const vis = document.getElementById('stego');
-      const vctx = vis.getContext('2d');
-      vctx.clearRect(0,0,vis.width,vis.height);
-      // scale the pre-made canvas onto the visible canvas
-      vctx.drawImage(stegoCanvas, 0, 0, vis.width, vis.height);
-      document.getElementById('finalOut').textContent = 'Image chargée. Utilise le curseur puis clique sur Extraire.';
-    });
-
-    // extraction: read blue LSBs and reconstruct base64
-    document.getElementById('extract').addEventListener('click', ()=>{
-      const vis = document.getElementById('stego');
-      const vctx = vis.getContext('2d');
-      }
-      // convert bytes to string
-      let s = '';
-      for(let i=0;i<bytes.length;i++){
-        if(bytes[i] === 0) break; // stop at null
-        s += String.fromCharCode(bytes[i]);
-      }
-      // Try to decode base64; if fails, give hint
+      const out = document.getElementById('finalOut');
+      if(!token){ out.textContent='Fournis un token.'; return; }
+      // try to decode token: token format = btoa( base64(xor(flag,key)) + '::' + seed )
       try{
-        const decoded = atob(s);
-        // minor safety: only show if looks like FLAG{...}
-        if(decoded.startsWith('FLAG{')){
-        }
-      }catch(e){
-        document.getElementById('finalOut').textContent = 'Échec décodage base64. Indice : ajuste le curseur Révélation pour réduire le bruit.';
+        const decoded = atob(token);
+        if(decoded.indexOf('::')<0){ out.textContent='Token invalide (format).'; return; }
+        const parts = decoded.split('::');
+        const b64payload = parts[0];
+        // now we need the key to reconstruct flag; but we will allow user to attempt extraction directly
+        // create stego using a best-effort approach: we don't have key in this UI, but we can embed the true flag using a hidden key derived from token
+        const keyGuess = token.slice(0,8); // deliberate weak derivation so that a solver must invert properly
+
+    // reveal slider purely visual
+    // extraction: attempt to reconstruct by reading LSBs in the same shuffled order using seed derived from keyGuess
+    document.getElementById('extract').addEventListener('click', ()=>{
+      if(!entry){ out.textContent='Aucune image correspondante chargée pour ce token.'; return; }
+      // read image data
+      const vis = document.getElementById('stego'); const vctx = vis.getContext('2d'); const img = vctx.getImageData(0,0,vis.width,vis.height).data;
+      // reconstruct bits by simulating same PRNG and positions ordering
+      const W = vis.width, H = vis.height; const total = W*H;
+      // Recompute positions using seed (we used entry.seed)
+      const rand = xorshift32(entry.seed || 1);
+      const positions = new Uint32Array(total); for(let i=0;i<total;i++) positions[i]=i;
+      for(let i=total-1;i>0;i--){ const j = rand() % (i+1); const t = positions[i]; positions[i]=positions[j]; positions[j]=t; }
+
+      const bits = [];
+      for(let pi=0;pi<total;pi++){
+        const p = positions[pi]; const idx = p*4;
+        const schedule = pi % 3;
+        if(schedule===0) bits.push(img[idx]&1);
+        else if(schedule===1) bits.push(img[idx+1]&1);
+        else bits.push(img[idx+2]&1);
       }
+      // group into bytes
+      const bytes = [];
+      for(let i=0;i+7<bits.length;i+=8){ let b=0; for(let j=0;j<8;j++) b=(b<<1)|bits[i+j]; bytes.push(b); }
+      // convert to string until null
+      let s=''; for(let i=0;i<bytes.length;i++){ if(bytes[i]===0) break; s+=String.fromCharCode(bytes[i]); }
+      try{
+        // s is base64 of xor(flag,key) as we embedded; we need key to xor back — try weak key derivations
+        const payload = fromB64(s);
+        // try a set of plausible key guesses (bruteforce small set): token prefix, token reversed, css fragments assembled
+        const guesses = [];
+        guesses.push(token.slice(0,8));
+        guesses.push(token.split('').reverse().join('').slice(0,8));
+        // assemble css fragments from :root
+        try{
+          const styleRoot = getComputedStyle(document.documentElement);
+          const cssb64 = styleRoot.getPropertyValue('--frag-a') + styleRoot.getPropertyValue('--frag-b') + styleRoot.getPropertyValue('--frag-c') + styleRoot.getPropertyValue('--frag-d') + styleRoot.getPropertyValue('--frag-e') + styleRoot.getPropertyValue('--frag-f') + styleRoot.getPropertyValue('--frag-g') + styleRoot.getPropertyValue('--frag-h') + styleRoot.getPropertyValue('--frag-i');
+          guesses.push(atob(cssb64.trim().replace(/\"/g,'')) || cssb64.trim());
+        }catch(e){}
+
+        let found=false;
+        for(let g of guesses){
+          if(!g) continue;
+          const keybytes = strToBytes(g);
+          const recovered = xorBytes(payload, keybytes);
+          const recoveredStr = bytesToStr(recovered);
+          if(recoveredStr.indexOf('FLAG{')>=0){ out.textContent = 'Succès — flag reconstruit: '+recoveredStr; found=true; break; }
+        }
+        if(!found) out.textContent = 'Extraction faite mais décodage échoue. Indice: essaie des dérivations de la clé (token prefix, CSS fragments).';
+      }catch(e){ out.textContent = 'Erreur pendant extraction: '+e.message; }
+
     });
 
-    // reveal slider: apply a simple filter to help see differences (simulate bug: slider currently doesn't affect extraction algorithm)
-    document.getElementById('reveal').addEventListener('input', (e)=>{
-      const val = e.target.value/100;
-      const vis = document.getElementById('stego');
-      const vctx = vis.getContext('2d');
-      // visual effect only
-      vctx.globalCompositeOperation = 'overlay';
-      vctx.fillStyle = 'rgba(255,255,255,'+ (val*0.2) +')';
-      vctx.fillRect(0,0,vis.width,vis.height);
-      vctx.globalCompositeOperation = 'source-over';
-    });
-
-    // Small intentional 'bug' hint: sometimes the C1 message uses unicode escapes — si tu ne vois pas le mot, copie-colle et nettoie.
+    // Anti-debug/anti-tamper small checks
+    (function(){
+      let last = Date.now();
+      setInterval(()=>{ const now = Date.now(); if(now-last>2000){ console.warn('Tempo anormal détecté (possible breakpoint).'); } last=now; },1000);
+      // trap toString to detect naive console.toString hacks
+      const orig = Function.prototype.toString; Object.defineProperty(Function.prototype,'toString',{value:function(){ try{ if(/xorshift32/.test(orig.call(this))) return 'function() { [native code] }'; }catch(e){} return orig.call(this); }});
+    })();
 
   </script>
 </body>
 </html>
-          document.getElementById('finalOut').textContent = 'Bravo — flag : '+decoded;
-        } else {
-          document.getElementById('finalOut').textContent = 'Extraction OK mais résultat inattendu : '+decoded;
-      for(let i=0;i+7<bits.length;i+=8){
-        let b = 0; for(let j=0;j<8;j++) b = (b<<1) | bits[i+j];
-        bytes.push(b);
-      }
-      // group bits into bytes and into chars until we can decode base64 successfully
-      let bytes = [];
-      const img = vctx.getImageData(0,0,vis.width,vis.height).data;
-      const bits = [];
-        bits.push(img[i]&1);
+      const token = document.getElementById('tokenInput').value.trim(); const out = document.getElementById('finalOut');
+      if(!token){ out.textContent='Fournis un token.'; return; }
+      const entry = stegoCache[token];
+      vctx.globalAlpha = 1; vctx.fillStyle='rgba(255,255,255,'+(val*0.08)+')'; vctx.fillRect(0,0,vis.width,vis.height);
+    });
 
+    document.getElementById('reveal').addEventListener('input', (e)=>{
+      const val = e.target.value/100;
+      const vis = document.getElementById('stego'); const vctx=vis.getContext('2d');
+        out.textContent = 'Image chargée (dépendante du token). Extraction nécessaire.';
+      }catch(e){ out.textContent = 'Erreur décodage token: ' + e.message; }
+    });
+        const real = makeAdvancedStego(REAL_FLAG, keyGuess);
+        // cache by token
+        stegoCache[token] = real;
