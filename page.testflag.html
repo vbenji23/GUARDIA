@@ -183,7 +183,8 @@
       // draw into visible canvas
       const vis = document.getElementById('stego');
       const vctx = vis.getContext('2d');
-      vctx.clearRect(0,0,vis.width,vis.height);      // scale the pre-made canvas onto the visible canvas
+      vctx.clearRect(0,0,vis.width,vis.height);
+      // scale the pre-made canvas onto the visible canvas
       vctx.drawImage(stegoCanvas, 0, 0, vis.width, vis.height);
       document.getElementById('finalOut').textContent = 'Image chargée. Utilise le curseur puis clique sur Extraire.';
     });
@@ -200,35 +201,20 @@
       // group bits into bytes and into chars until we can decode base64 successfully
       let bytes = [];
       for(let i=0;i+7<bits.length;i+=8){
+        let b = 0; for(let j=0;j<8;j++) b = (b<<1) | bits[i+j];
         bytes.push(b);
       }
       // convert bytes to string
-
       let s = '';
       for(let i=0;i<bytes.length;i++){
         if(bytes[i] === 0) break; // stop at null
-
         s += String.fromCharCode(bytes[i]);
       }
       // Try to decode base64; if fails, give hint
-      try{
-        const decoded = atob(s);
-        // minor safety: only show if looks like FLAG{...}
-        if(decoded.startsWith('FLAG{')){
-
-          document.getElementById('finalOut').textContent = 'Bravo — flag : '+decoded;
-        } else {
-          document.getElementById('finalOut').textContent = 'Extraction OK mais résultat inattendu : '+decoded;
         }
-      }catch(e){
-        document.getElementById('finalOut').textContent = 'Échec décodage base64. Indice : ajuste le curseur Révélation pour réduire le bruit.';
-      }
     });
 
     // reveal slider: apply a simple filter to help see differences (simulate bug: slider currently doesn't affect extraction algorithm)
-    document.getElementById('reveal').addEventListener('input', (e)=>{
-      const val = e.target.value/100;
-      const vis = document.getElementById('stego');
       const vctx = vis.getContext('2d');
       // visual effect only
       vctx.globalCompositeOperation = 'overlay';
@@ -242,4 +228,16 @@
   </script>
 </body>
 </html>
+    document.getElementById('reveal').addEventListener('input', (e)=>{
+      const val = e.target.value/100;
+      const vis = document.getElementById('stego');
+      }catch(e){
+        document.getElementById('finalOut').textContent = 'Échec décodage base64. Indice : ajuste le curseur Révélation pour réduire le bruit.';
+      }
+          document.getElementById('finalOut').textContent = 'Bravo — flag : '+decoded;
+        } else {
+          document.getElementById('finalOut').textContent = 'Extraction OK mais résultat inattendu : '+decoded;
+      try{
+        const decoded = atob(s);
+        if(decoded.startsWith('FLAG{')){
 
