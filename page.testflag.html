@@ -6,6 +6,7 @@
   <title>CTF — Flag caché (3 couches)</title>
   <meta name="description" content="Page de défi: trouver le flag caché derrière 3 couches — indices, obfuscation JS, stéganographie visuelle.">
   <style>
+    /* CSS-EMBED-B64: RkxBR3t0cmlfbGF5ZXJfY3NzX29wdGlvbn0= */
     :root{--bg:#071022;--card:#0b1220;--muted:#9aa6b2;--accent:#06b6d4}
     *{box-sizing:border-box}
     body{margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,var(--bg),#02101a);color:#eaf4ff;padding:28px;}
@@ -96,19 +97,17 @@
     const hiddenScript = `(function(s){
       // Ce code vérifie le mot et renvoie un token. Il contient volontairement un bug subtil.
       function h(input){
-        // normalize
         var v = input && input.toLowerCase().trim();
-        // BUG volontaire : une variable mal nommée (vvs vsv)
         if(!v) return null;
-        // correct secret is 'hignation' (léger anagramme)
+        // Le secret attendu est 'hignation' (anagramme). Acceptons-le.
         if(v.replace(/[^a-z]/g,'') === 'hignation'){
-          // pseudo-token encodé
-          return btoa('token:'+Date.now()+':'+Math.random().toString(36).slice(2,10));
+          // Retourne un token double-encodé : btoa('token:'+ btoa(FLAG) )
+          return btoa('token:' + btoa('FLAG{tri_layer_css_option}'));
         }
         return null;
       }
       return h(s);
-    })`;
+    })`; 
 
     document.getElementById('c2Inspect').addEventListener('click', ()=>{
       document.getElementById('c2Output').textContent = hiddenScript;
@@ -169,7 +168,7 @@
     }
 
     // Pre-generate image but keep it locked until correct token
-    const secretFlag = 'FLAG{c3_surprise}';
+    const secretFlag = 'FLAG{tri_layer_css_option}';
     const stegoCanvas = makeStegoCanvas(secretFlag);
 
     document.getElementById('loadImage').addEventListener('click', ()=>{
@@ -193,16 +192,6 @@
     document.getElementById('extract').addEventListener('click', ()=>{
       const vis = document.getElementById('stego');
       const vctx = vis.getContext('2d');
-      const img = vctx.getImageData(0,0,vis.width,vis.height).data;
-      const bits = [];
-      for(let i=2;i<img.length;i+=4){
-        bits.push(img[i]&1);
-      }
-      // group bits into bytes and into chars until we can decode base64 successfully
-      let bytes = [];
-      for(let i=0;i+7<bits.length;i+=8){
-        let b = 0; for(let j=0;j<8;j++) b = (b<<1) | bits[i+j];
-        bytes.push(b);
       }
       // convert bytes to string
       let s = '';
@@ -211,10 +200,20 @@
         s += String.fromCharCode(bytes[i]);
       }
       // Try to decode base64; if fails, give hint
+      try{
+        const decoded = atob(s);
+        // minor safety: only show if looks like FLAG{...}
+        if(decoded.startsWith('FLAG{')){
         }
+      }catch(e){
+        document.getElementById('finalOut').textContent = 'Échec décodage base64. Indice : ajuste le curseur Révélation pour réduire le bruit.';
+      }
     });
 
     // reveal slider: apply a simple filter to help see differences (simulate bug: slider currently doesn't affect extraction algorithm)
+    document.getElementById('reveal').addEventListener('input', (e)=>{
+      const val = e.target.value/100;
+      const vis = document.getElementById('stego');
       const vctx = vis.getContext('2d');
       // visual effect only
       vctx.globalCompositeOperation = 'overlay';
@@ -228,16 +227,16 @@
   </script>
 </body>
 </html>
-    document.getElementById('reveal').addEventListener('input', (e)=>{
-      const val = e.target.value/100;
-      const vis = document.getElementById('stego');
-      }catch(e){
-        document.getElementById('finalOut').textContent = 'Échec décodage base64. Indice : ajuste le curseur Révélation pour réduire le bruit.';
-      }
           document.getElementById('finalOut').textContent = 'Bravo — flag : '+decoded;
         } else {
           document.getElementById('finalOut').textContent = 'Extraction OK mais résultat inattendu : '+decoded;
-      try{
-        const decoded = atob(s);
-        if(decoded.startsWith('FLAG{')){
+      for(let i=0;i+7<bits.length;i+=8){
+        let b = 0; for(let j=0;j<8;j++) b = (b<<1) | bits[i+j];
+        bytes.push(b);
+      }
+      // group bits into bytes and into chars until we can decode base64 successfully
+      let bytes = [];
+      const img = vctx.getImageData(0,0,vis.width,vis.height).data;
+      const bits = [];
+        bits.push(img[i]&1);
 
