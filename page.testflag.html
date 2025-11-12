@@ -183,8 +183,7 @@
       // draw into visible canvas
       const vis = document.getElementById('stego');
       const vctx = vis.getContext('2d');
-      vctx.clearRect(0,0,vis.width,vis.height);
-      // scale the pre-made canvas onto the visible canvas
+      vctx.clearRect(0,0,vis.width,vis.height);      // scale the pre-made canvas onto the visible canvas
       vctx.drawImage(stegoCanvas, 0, 0, vis.width, vis.height);
       document.getElementById('finalOut').textContent = 'Image chargée. Utilise le curseur puis clique sur Extraire.';
     });
